@@ -38,7 +38,8 @@ test(
   async () => {
     const client = new Client({
       user: 'postgres',
-      database: 'casbin',
+      database: 'postgres',
+      password: 'postgres',
     });
     const a = await UniversalAdapter.newAdapter('pg', client);
 
