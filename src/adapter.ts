@@ -1,5 +1,5 @@
 import type { Adapter, Model } from 'casbin';
-import type { CasbinRule } from './casbinRule';
+import type { CasbinRule } from './casbin-rule';
 import type * as pg from 'pg';
 // import type * as sqlite3 from 'sqlite3';
 // import type * as mysql from 'mysql';
@@ -26,27 +26,35 @@ export class UniversalAdapter implements Adapter {
   private knex: Knex;
   private config: Config;
   private client: Instance;
-  private casbinRule: Knex.QueryBuilder<CasbinRule, unknown[]>;
 
   constructor(drive: SupportedDrive, client: Instance) {
-    this.config.client = drive;
+    this.config = { client: drive };
     this.knex = Knex(this.config);
-    this.casbinRule = this.knex<CasbinRule>(CasbinRuleTable);
     this.client = client;
+  }
+
+  static async newAdapter(
+    drive: SupportedDrive,
+    client: Instance
+  ): Promise<UniversalAdapter> {
+    const a = new UniversalAdapter(drive, client);
+    await a.client.connect();
+    await a.createTable();
+
+    return a;
   }
 
   async loadPolicy(model: Model): Promise<void> {
     const result = await this.client.query<CasbinRule>(
-      this.casbinRule.select().toSQL().sql
+      this.knex.select().from(CasbinRuleTable).toQuery()
     );
-
     for (const line of result.rows) {
       this.loadPolicyLine(line, model);
     }
   }
 
   async savePolicy(model: Model): Promise<boolean> {
-    await this.client.query(this.casbinRule.del<CasbinRule>().toSQL().sql);
+    await this.client.query(this.knex.del().from(CasbinRuleTable).toQuery());
 
     let astMap = model.model.get('p')!;
     const processes: Array<Promise<unknown>> = [];
@@ -55,7 +63,7 @@ export class UniversalAdapter implements Adapter {
       for (const rule of ast.policy) {
         const line = this.savePolicyLine(ptype, rule);
         const p = this.client.query<CasbinRule>(
-          this.casbinRule.insert(line).toSQL().sql
+          this.knex.insert(line).into(CasbinRuleTable).toQuery()
         );
         processes.push(p);
       }
@@ -66,7 +74,7 @@ export class UniversalAdapter implements Adapter {
       for (const rule of ast.policy) {
         const line = this.savePolicyLine(ptype, rule);
         const p = this.client.query<CasbinRule>(
-          this.casbinRule.insert(line).toSQL().sql
+          this.knex.insert(line).into(CasbinRuleTable).toQuery()
         );
         processes.push(p);
       }
@@ -80,7 +88,7 @@ export class UniversalAdapter implements Adapter {
   async addPolicy(sec: string, ptype: string, rule: string[]): Promise<void> {
     const line = this.savePolicyLine(ptype, rule);
     await this.client.query<CasbinRule>(
-      this.casbinRule.insert(line).toSQL().sql
+      this.knex.insert(line).into(CasbinRuleTable).toQuery()
     );
   }
 
@@ -93,7 +101,7 @@ export class UniversalAdapter implements Adapter {
     for (const rule of rules) {
       const line = this.savePolicyLine(ptype, rule);
       const p = this.client.query<CasbinRule>(
-        this.casbinRule.insert(line).toSQL().sql
+        this.knex.insert(line).into(CasbinRuleTable).toQuery()
       );
       processes.push(p);
     }
@@ -108,7 +116,7 @@ export class UniversalAdapter implements Adapter {
   ): Promise<void> {
     const line = this.savePolicyLine(ptype, rule);
     await this.client.query<CasbinRule>(
-      this.casbinRule.where(line).del().toSQL().sql
+      this.knex.del().where(line).from(CasbinRuleTable).toQuery()
     );
   }
 
@@ -121,7 +129,7 @@ export class UniversalAdapter implements Adapter {
     for (const rule of rules) {
       const line = this.savePolicyLine(ptype, rule);
       const p = this.client.query<CasbinRule>(
-        this.casbinRule.where(line).del().toSQL().sql
+        this.knex.del().where(line).from(CasbinRuleTable).toQuery()
       );
       processes.push(p);
     }
@@ -158,7 +166,7 @@ export class UniversalAdapter implements Adapter {
     }
 
     await this.client.query<CasbinRule>(
-      this.casbinRule.where(line).del().toSQL().sql
+      this.knex.del().where(line).from(CasbinRuleTable).toQuery()
     );
   }
 
@@ -198,5 +206,19 @@ export class UniversalAdapter implements Adapter {
     }
 
     return line;
+  }
+
+  private async createTable(): Promise<void> {
+    const createTableSQL = this.knex.schema
+      .createTableIfNotExists(CasbinRuleTable, (table) => {
+        table.increments();
+        table.string('ptype').notNullable();
+        for (const i of ['v0', 'v1', 'v2', 'v3', 'v4', 'v5']) {
+          table.string(i);
+        }
+      })
+      .toQuery();
+
+    await this.client.query(createTableSQL);
   }
 }

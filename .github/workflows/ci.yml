@@ -7,8 +7,18 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
+      postgres:
+        image: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
       mysql:
-        image: mysql:latest
+        image: mysql
         ports:
           - 3306:3306
         env:
@@ -20,7 +30,9 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 12
-      - run: mysql --host 127.0.0.1 --port 3306 -uroot -p -e "source ./prisma/casbin_rule.sql"
+      - run: |
+          createdb -h localhost -p 5432 -U postgres casbin
+          mysql --host 127.0.0.1 --port 3306 -uroot -p -e "CREATE DATABASE casbin"
       - run: npm i
       - run: npm run format:check
       - run: npm run lint
@@ -43,7 +55,7 @@ jobs:
       - run: npm i
       - run: npm run build
       - name: Release
-        if: github.event_name == 'push' && github.repository == 'node-casbin/prisma-adapter'
+        if: github.event_name == 'push' && github.repository == 'node-casbin/universal-adapter'
         run: npx semantic-release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
