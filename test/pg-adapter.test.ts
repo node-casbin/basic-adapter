@@ -34,7 +34,7 @@ async function testGetGroupingPolicy(
 }
 
 test(
-  'Pg Adapter',
+  'pg adapter',
   async () => {
     const client = new Client({
       user: 'postgres',

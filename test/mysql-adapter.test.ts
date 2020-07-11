@@ -34,11 +34,11 @@ async function testGetGroupingPolicy(
 }
 
 test(
-  'TestAdapter',
+  'mysql adapter',
   async () => {
     const client = createConnection({
       user: 'root',
-      password: '',
+      password: 'password',
       database: 'casbin',
     });
     const a = await UniversalAdapter.newAdapter('mysql', client);
