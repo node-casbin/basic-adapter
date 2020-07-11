@@ -1,0 +1,29 @@
+name: mysql
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:latest
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - run: |
+          mysql --host 127.0.0.1 --port 3306 -uroot -p -e "CREATE DATABASE casbin"
+          mysql --host 127.0.0.1 --port 3306 -uroot -p -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY ''"
+      - run: npm i
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm test -t mysql-adapter
