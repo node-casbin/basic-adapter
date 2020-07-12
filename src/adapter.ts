@@ -1,8 +1,8 @@
 import type { Adapter, Model } from 'casbin';
 import type { CasbinRule } from './casbin-rule';
 import type * as pg from 'pg';
+import type * as mysql from 'mysql';
 // import type * as sqlite3 from 'sqlite3';
-// import type * as mysql from 'mysql';
 // import type * as mysql2 from 'mysql2';
 // import type * as oracledb from 'oracledb';
 // import type * as mssql from 'mssql';
@@ -10,59 +10,60 @@ import type * as pg from 'pg';
 import { Helper } from 'casbin';
 import * as Knex from 'knex';
 
-type SupportedDrive = 'pg';
-// | 'sqlite3'
-// | 'mysql'
-// | 'mysql2'
-// | 'oracledb'
-// | 'mssql'
-
-type Config = Knex.Config;
-type Instance = pg.Client;
+type Config = Knex.Config & {
+  client: keyof Instance;
+};
+type Instance = {
+  pg: pg.Client;
+  mysql: mysql.Connection;
+};
 
 const CasbinRuleTable = 'casbin_rule';
 
-export class UniversalAdapter implements Adapter {
+export class UniversalAdapter<T extends keyof Instance> implements Adapter {
   private knex: Knex;
   private config: Config;
-  private client: Instance;
+  private drive: T;
+  private client: Instance[T];
 
-  constructor(drive: SupportedDrive, client: Instance) {
+  private constructor(drive: T, client: Instance[T]) {
     this.config = { client: drive };
     this.knex = Knex(this.config);
+    this.drive = drive;
     this.client = client;
   }
 
-  static async newAdapter(
-    drive: SupportedDrive,
-    client: Instance
-  ): Promise<UniversalAdapter> {
+  static async newAdapter<T extends keyof Instance>(
+    drive: T,
+    client: Instance[T]
+  ): Promise<UniversalAdapter<T>> {
     const a = new UniversalAdapter(drive, client);
-    await a.client.connect();
+    await a.connect();
     await a.createTable();
 
     return a;
   }
 
   async loadPolicy(model: Model): Promise<void> {
-    const result = await this.client.query<CasbinRule>(
+    const result = await this.query(
       this.knex.select().from(CasbinRuleTable).toQuery()
     );
-    for (const line of result.rows) {
+
+    for (const line of result) {
       this.loadPolicyLine(line, model);
     }
   }
 
   async savePolicy(model: Model): Promise<boolean> {
-    await this.client.query(this.knex.del().from(CasbinRuleTable).toQuery());
+    await this.query(this.knex.del().from(CasbinRuleTable).toQuery());
 
     let astMap = model.model.get('p')!;
-    const processes: Array<Promise<unknown>> = [];
+    const processes: Array<Promise<CasbinRule[]>> = [];
 
     for (const [ptype, ast] of astMap) {
       for (const rule of ast.policy) {
         const line = this.savePolicyLine(ptype, rule);
-        const p = this.client.query<CasbinRule>(
+        const p = this.query(
           this.knex.insert(line).into(CasbinRuleTable).toQuery()
         );
         processes.push(p);
@@ -73,7 +74,7 @@ export class UniversalAdapter implements Adapter {
     for (const [ptype, ast] of astMap) {
       for (const rule of ast.policy) {
         const line = this.savePolicyLine(ptype, rule);
-        const p = this.client.query<CasbinRule>(
+        const p = this.query(
           this.knex.insert(line).into(CasbinRuleTable).toQuery()
         );
         processes.push(p);
@@ -87,9 +88,7 @@ export class UniversalAdapter implements Adapter {
 
   async addPolicy(sec: string, ptype: string, rule: string[]): Promise<void> {
     const line = this.savePolicyLine(ptype, rule);
-    await this.client.query<CasbinRule>(
-      this.knex.insert(line).into(CasbinRuleTable).toQuery()
-    );
+    await this.query(this.knex.insert(line).into(CasbinRuleTable).toQuery());
   }
 
   async addPolicies(
@@ -100,7 +99,7 @@ export class UniversalAdapter implements Adapter {
     const processes: Array<Promise<unknown>> = [];
     for (const rule of rules) {
       const line = this.savePolicyLine(ptype, rule);
-      const p = this.client.query<CasbinRule>(
+      const p = this.query(
         this.knex.insert(line).into(CasbinRuleTable).toQuery()
       );
       processes.push(p);
@@ -115,7 +114,7 @@ export class UniversalAdapter implements Adapter {
     rule: string[]
   ): Promise<void> {
     const line = this.savePolicyLine(ptype, rule);
-    await this.client.query<CasbinRule>(
+    await this.query(
       this.knex.del().where(line).from(CasbinRuleTable).toQuery()
     );
   }
@@ -125,10 +124,10 @@ export class UniversalAdapter implements Adapter {
     ptype: string,
     rules: string[][]
   ): Promise<void> {
-    const processes: Array<Promise<unknown>> = [];
+    const processes: Array<Promise<CasbinRule[]>> = [];
     for (const rule of rules) {
       const line = this.savePolicyLine(ptype, rule);
-      const p = this.client.query<CasbinRule>(
+      const p = this.query(
         this.knex.del().where(line).from(CasbinRuleTable).toQuery()
       );
       processes.push(p);
@@ -165,7 +164,7 @@ export class UniversalAdapter implements Adapter {
       line.v5 = fieldValues[5 - fieldIndex];
     }
 
-    await this.client.query<CasbinRule>(
+    await this.query(
       this.knex.del().where(line).from(CasbinRuleTable).toQuery()
     );
   }
@@ -219,6 +218,52 @@ export class UniversalAdapter implements Adapter {
       })
       .toQuery();
 
-    await this.client.query(createTableSQL);
+    await this.query(createTableSQL);
+  }
+
+  private async connect() {
+    switch (this.drive) {
+      case 'pg': {
+        await (<UniversalAdapter<'pg'>>this).client.connect();
+
+        break;
+      }
+      case 'mysql': {
+        await new Promise((resolve, reject) => {
+          (<UniversalAdapter<'mysql'>>this).client.connect((err) => {
+            if (err) reject(err);
+            resolve();
+          });
+        });
+
+        break;
+      }
+    }
+  }
+
+  private async query(sql: string): Promise<CasbinRule[]> {
+    let result: CasbinRule[] | undefined;
+
+    switch (this.drive) {
+      case 'pg': {
+        result = (
+          await (<UniversalAdapter<'pg'>>this).client.query<CasbinRule>(sql)
+        ).rows;
+
+        break;
+      }
+      case 'mysql': {
+        result = await new Promise((resolve, reject) => {
+          (<UniversalAdapter<'mysql'>>this).client.query(sql, (err, rows) => {
+            if (err) return reject(err);
+            resolve(rows);
+          });
+        });
+
+        break;
+      }
+    }
+
+    return result ?? [];
   }
 }

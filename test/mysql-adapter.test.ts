@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { newEnforcer, Enforcer, Util } from 'casbin';
-import { Client } from 'pg';
+import { createConnection } from 'mysql';
 import { UniversalAdapter } from '../src/adapter';
 
 function array2DEqualsIgnoreOrder(a: string[][], b: string[][]): boolean {
@@ -34,14 +34,14 @@ async function testGetGroupingPolicy(
 }
 
 test(
-  'pg adapter',
+  'mysql adapter',
   async () => {
-    const client = new Client({
-      user: 'postgres',
-      database: 'postgres',
-      password: 'postgres',
+    const client = createConnection({
+      user: 'root',
+      password: 'password',
+      database: 'casbin',
     });
-    const a = await UniversalAdapter.newAdapter('pg', client);
+    const a = await UniversalAdapter.newAdapter('mysql', client);
 
     try {
       // Because the DB is empty at first,
