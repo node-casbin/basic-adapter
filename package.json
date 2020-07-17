@@ -1,7 +1,7 @@
 {
-  "name": "casbin-universal-adapter",
+  "name": "casbin-basic-adapter",
   "version": "0.0.1",
-  "description": "A universal adapter supports pg, sqlite3, mysql, mysql2, oracledb and mssql",
+  "description": "A basic adapter supports pg, sqlite3, mysql, mysql2, oracledb and mssql",
   "main": "lib/adapter.js",
   "typings": "lib/adapter.d.ts",
   "scripts": {
