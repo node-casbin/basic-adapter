@@ -10,17 +10,17 @@ import type * as mysql from 'mysql';
 import { Helper } from 'casbin';
 import * as Knex from 'knex';
 
-type Config = Knex.Config & {
+export type Config = Knex.Config & {
   client: keyof Instance;
 };
-type Instance = {
+export type Instance = {
   pg: pg.Client;
   mysql: mysql.Connection;
 };
 
 const CasbinRuleTable = 'casbin_rule';
 
-export class UniversalAdapter<T extends keyof Instance> implements Adapter {
+export class BasicAdapter<T extends keyof Instance> implements Adapter {
   private knex: Knex;
   private config: Config;
   private drive: T;
@@ -36,8 +36,8 @@ export class UniversalAdapter<T extends keyof Instance> implements Adapter {
   static async newAdapter<T extends keyof Instance>(
     drive: T,
     client: Instance[T]
-  ): Promise<UniversalAdapter<T>> {
-    const a = new UniversalAdapter(drive, client);
+  ): Promise<BasicAdapter<T>> {
+    const a = new BasicAdapter(drive, client);
     await a.connect();
     await a.createTable();
 
@@ -224,13 +224,13 @@ export class UniversalAdapter<T extends keyof Instance> implements Adapter {
   private async connect() {
     switch (this.drive) {
       case 'pg': {
-        await (<UniversalAdapter<'pg'>>this).client.connect();
+        await (<BasicAdapter<'pg'>>this).client.connect();
 
         break;
       }
       case 'mysql': {
         await new Promise((resolve, reject) => {
-          (<UniversalAdapter<'mysql'>>this).client.connect((err) => {
+          (<BasicAdapter<'mysql'>>this).client.connect((err) => {
             if (err) reject(err);
             resolve();
           });
@@ -247,14 +247,14 @@ export class UniversalAdapter<T extends keyof Instance> implements Adapter {
     switch (this.drive) {
       case 'pg': {
         result = (
-          await (<UniversalAdapter<'pg'>>this).client.query<CasbinRule>(sql)
+          await (<BasicAdapter<'pg'>>this).client.query<CasbinRule>(sql)
         ).rows;
 
         break;
       }
       case 'mysql': {
         result = await new Promise((resolve, reject) => {
-          (<UniversalAdapter<'mysql'>>this).client.query(sql, (err, rows) => {
+          (<BasicAdapter<'mysql'>>this).client.query(sql, (err, rows) => {
             if (err) return reject(err);
             resolve(rows);
           });
