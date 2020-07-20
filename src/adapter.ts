@@ -16,8 +16,8 @@ import type { Adapter, Model } from 'casbin';
 import type { CasbinRule } from './casbin-rule';
 import type * as pg from 'pg';
 import type * as mysql from 'mysql';
+import type * as mysql2 from 'mysql2/promise';
 // import type * as sqlite3 from 'sqlite3';
-// import type * as mysql2 from 'mysql2';
 // import type * as oracledb from 'oracledb';
 // import type * as mssql from 'mssql';
 
@@ -30,6 +30,7 @@ export type Config = Knex.Config & {
 export type Instance = {
   pg: pg.Client;
   mysql: mysql.Connection;
+  mysql2: Promise<mysql2.Connection>;
 };
 
 const CasbinRuleTable = 'casbin_rule';
@@ -183,6 +184,22 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
     );
   }
 
+  async close(): Promise<void> {
+    switch (this.drive) {
+      case 'pg':
+      case 'mysql': {
+        await (<BasicAdapter<'pg' | 'mysql'>>this).client.end();
+
+        break;
+      }
+      case 'mysql2': {
+        await (await (<BasicAdapter<'mysql2'>>this).client).end();
+
+        break;
+      }
+    }
+  }
+
   private loadPolicyLine(line: CasbinRule, model: Model): void {
     const result =
       line.ptype +
@@ -252,6 +269,11 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
 
         break;
       }
+      case 'mysql2': {
+        await (<BasicAdapter<'mysql2'>>this).client;
+
+        break;
+      }
     }
   }
 
@@ -273,6 +295,13 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
             resolve(rows);
           });
         });
+
+        break;
+      }
+      case 'mysql2': {
+        result = (
+          await (await (<BasicAdapter<'mysql2'>>this).client).query(sql)
+        )[0] as CasbinRule[];
 
         break;
       }

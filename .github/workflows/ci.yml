@@ -28,7 +28,7 @@ jobs:
       - run: npm run format:check
       - run: npm run lint
       - run: npm test -t pg-adapter
-  mysql:
+  mysql_and_mysql2:
     runs-on: ubuntu-latest
 
     services:
@@ -50,4 +50,6 @@ jobs:
       - run: npm i
       - run: npm run format:check
       - run: npm run lint
-      - run: npm test -t mysql-adapter
+      - run: |
+          npm test -t mysql-adapter
+          npm test -t mysql2-adapter
