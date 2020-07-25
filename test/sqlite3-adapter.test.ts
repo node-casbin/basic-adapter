@@ -12,18 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createConnection } from 'mysql2/promise';
+import { Database } from 'sqlite3';
 import Runner from './runner';
 
-test(
-  'mysql2 adapter',
-  Runner(
-    'mysql2',
-    createConnection({
-      user: 'root',
-      password: 'password',
-      database: 'casbin',
-    })
-  ),
-  60 * 1000
-);
+test('sqlite3 adapter', Runner('sqlite3', new Database(':memory:')), 60 * 1000);

@@ -3,6 +3,13 @@ name: ci
 on: [push, pull_request]
 
 jobs:
+  fmt_lint:
+    runs-on: unbuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm i
+      - run: npm run format:check
+      - run: npm run lint
   postgres:
     runs-on: ubuntu-latest
 
@@ -21,12 +28,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12
       - run: npm i
-      - run: npm run format:check
-      - run: npm run lint
       - run: npm test -t pg-adapter
   mysql_and_mysql2:
     runs-on: ubuntu-latest
@@ -44,12 +46,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12
       - run: npm i
-      - run: npm run format:check
-      - run: npm run lint
       - run: |
           npm test -t mysql-adapter
           npm test -t mysql2-adapter
+
+  sqlite3:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm i
+      - run: npm test -t sqlite3-adapter

@@ -8,8 +8,8 @@ we currently supports the following SQL drives:
 
 - [x] pg
 - [x] mysql
-- [ ] mysql2
-- [ ] sqlite3
+- [x] mysql2
+- [x] sqlite3
 - [ ] oracledb
 - [ ] mssql
 

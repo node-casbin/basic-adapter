@@ -17,7 +17,7 @@ import type { CasbinRule } from './casbin-rule';
 import type * as pg from 'pg';
 import type * as mysql from 'mysql';
 import type * as mysql2 from 'mysql2/promise';
-// import type * as sqlite3 from 'sqlite3';
+import type * as sqlite3 from 'sqlite3';
 // import type * as oracledb from 'oracledb';
 // import type * as mssql from 'mssql';
 
@@ -31,6 +31,7 @@ export type Instance = {
   pg: pg.Client;
   mysql: mysql.Connection;
   mysql2: Promise<mysql2.Connection>;
+  sqlite3: sqlite3.Database;
 };
 
 const CasbinRuleTable = 'casbin_rule';
@@ -42,7 +43,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
   private client: Instance[T];
 
   private constructor(drive: T, client: Instance[T]) {
-    this.config = { client: drive };
+    this.config = { client: drive, useNullAsDefault: drive === 'sqlite3' };
     this.knex = Knex(this.config);
     this.drive = drive;
     this.client = client;
@@ -197,6 +198,19 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
 
         break;
       }
+      case 'sqlite3': {
+        await new Promise((resolve, reject) => {
+          (<BasicAdapter<'sqlite3'>>this).client.close((err) => {
+            if (err) {
+              reject(err);
+            }
+
+            resolve();
+          });
+        });
+
+        break;
+      }
     }
   }
 
@@ -274,6 +288,11 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
 
         break;
       }
+      case 'sqlite3': {
+        // sqlite3 will connect automatically
+
+        break;
+      }
     }
   }
 
@@ -304,6 +323,17 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
         )[0] as CasbinRule[];
 
         break;
+      }
+      case 'sqlite3': {
+        result = await new Promise<CasbinRule[] | undefined>(
+          (resolve, reject) => {
+            (<BasicAdapter<'sqlite3'>>this).client.all(sql, (err, rows) => {
+              if (err) reject(err);
+
+              resolve(rows);
+            });
+          }
+        );
       }
     }
 
