@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   fmt_lint:
-    runs-on: unbuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: npm i
