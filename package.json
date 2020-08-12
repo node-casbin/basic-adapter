@@ -1,6 +1,6 @@
 {
   "name": "casbin-basic-adapter",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A basic adapter supports pg, sqlite3, mysql, mysql2, oracledb and mssql",
   "main": "lib/adapter.js",
   "typings": "lib/adapter.d.ts",
@@ -26,7 +26,7 @@
     "@types/sqlite3": "^3.1.6",
     "@typescript-eslint/eslint-plugin": "^3.4.0",
     "@typescript-eslint/parser": "^3.4.0",
-    "casbin": "^5.0.4",
+    "casbin": "^5.1.2",
     "eslint": "^7.3.1",
     "eslint-config-prettier": "^6.11.0",
     "jest": "^26.1.0",
@@ -44,7 +44,7 @@
     "typescript": "^3.9.6"
   },
   "peerDependencies": {
-    "casbin": "^5.0.4"
+    "casbin": "^5.1.2"
   },
   "files": [
     "lib",
