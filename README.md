@@ -22,7 +22,7 @@ npm i casbin-basic-adapter
 ## Simple Example
 
 ```ts
-import casbin from 'casbin';
+import { newEnforcer } from 'casbin';
 import { Client } from 'pg';
 import { BasicAdapter } from 'casbin-basic-adapter';
 
@@ -37,7 +37,7 @@ async function myFunction() {
       password: 'postgres',
     }));
 
-  const e = await casbin.newEnforcer('examples/rbac_model.conf', a);
+  const e = await newEnforcer('examples/rbac_model.conf', a);
 
   // Check the permission.
   e.enforce('alice', 'data1', 'read');
