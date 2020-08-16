@@ -57,3 +57,17 @@ jobs:
       - uses: actions/checkout@v2
       - run: npm i
       - run: npm test -t sqlite3-adapter
+
+  finish:
+    needs: [fmt_lint, postgres, mysql_and_mysql2, sqlite3]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm i
+      - run: npm run build
+      - name: Release
+        if: github.event_name == 'push' && github.repository == 'node-casbin/basic-adapter'
+        run: npx semantic-release
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
