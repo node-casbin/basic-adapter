@@ -22,7 +22,7 @@ we currently supports the following SQL drives:
 - [x] mysql2
 - [x] sqlite3
 - [ ] oracledb
-- [ ] mssql
+- [x] mssql
 
 ## Installation
 
