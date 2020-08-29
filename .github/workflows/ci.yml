@@ -58,8 +58,22 @@ jobs:
       - run: npm i
       - run: npm test -t sqlite3-adapter
 
+  mssql:
+    runs-on: ubuntu-latest
+    steps:
+      - name: run sqlserver
+        env:
+          SA_PASSWORD: Passw0rd
+        run: |
+          docker run --name sqlserver -it -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD='$SA_PASSWORD'' -p 1433:1433 -d mcr.microsoft.com/mssql/server:2017-latest
+          echo 'awaiting sqlserver bootup' && sleep 15
+          sqlcmd -S 127.0.0.1 -U sa -P $SA_PASSWORD -Q 'CREATE DATABASE casbin'
+      - uses: actions/checkout@v2
+      - run: npm i
+      - run: npm test -t mssql-adapter
+
   finish:
-    needs: [fmt_lint, postgres, mysql_and_mysql2, sqlite3]
+    needs: [fmt_lint, postgres, mysql_and_mysql2, sqlite3, mssql]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
