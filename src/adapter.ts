@@ -19,7 +19,7 @@ import type * as mysql from 'mysql';
 import type * as mysql2 from 'mysql2/promise';
 import type * as sqlite3 from 'sqlite3';
 import type * as mssql from 'mssql';
-// import type * as oracledb from 'oracledb';
+import type * as oracledb from 'oracledb';
 
 import { Helper } from 'casbin';
 import * as Knex from 'knex';
@@ -33,6 +33,7 @@ export type Instance = {
   mysql2: Promise<mysql2.Connection>;
   sqlite3: sqlite3.Database;
   mssql: mssql.ConnectionPool;
+  oracledb: Promise<oracledb.Connection>;
 };
 
 const CasbinRuleTable = 'casbin_rule';
@@ -103,13 +104,13 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
     return true;
   }
 
-  async addPolicy(sec: string, ptype: string, rule: string[]): Promise<void> {
+  async addPolicy(_sec: string, ptype: string, rule: string[]): Promise<void> {
     const line = this.savePolicyLine(ptype, rule);
     await this.query(this.knex.insert(line).into(CasbinRuleTable).toQuery());
   }
 
   async addPolicies(
-    sec: string,
+    _sec: string,
     ptype: string,
     rules: string[][]
   ): Promise<void> {
@@ -126,7 +127,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
   }
 
   async removePolicy(
-    sec: string,
+    _sec: string,
     ptype: string,
     rule: string[]
   ): Promise<void> {
@@ -137,7 +138,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
   }
 
   async removePolicies(
-    sec: string,
+    _sec: string,
     ptype: string,
     rules: string[][]
   ): Promise<void> {
@@ -154,7 +155,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
   }
 
   async removeFilteredPolicy(
-    sec: string,
+    _sec: string,
     ptype: string,
     fieldIndex: number,
     ...fieldValues: string[]
@@ -214,6 +215,11 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
       }
       case 'mssql': {
         await (<BasicAdapter<'mssql'>>this).client.close();
+
+        break;
+      }
+      case 'oracledb': {
+        await (await (<BasicAdapter<'oracledb'>>this).client).close();
 
         break;
       }
@@ -304,6 +310,11 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
 
         break;
       }
+      case 'oracledb': {
+        await (<BasicAdapter<'oracledb'>>this).client;
+
+        break;
+      }
     }
   }
 
@@ -351,6 +362,15 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
       case 'mssql': {
         result = ((await (<BasicAdapter<'mssql'>>this).client.query(sql))
           .recordset as unknown) as CasbinRule[] | undefined;
+
+        break;
+      }
+      case 'oracledb': {
+        result = (
+          await (await (<BasicAdapter<'oracledb'>>this).client).execute<
+            CasbinRule
+          >(sql)
+        ).rows;
 
         break;
       }
