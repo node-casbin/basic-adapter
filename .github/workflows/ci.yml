@@ -72,8 +72,28 @@ jobs:
       - run: npm i
       - run: npm test -t mssql-adapter
 
+  oracledb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: run sqlserver
+        env:
+          SA_PASSWORD: Casbin_db # The password must be at least 8 characters long and contain characters from three of the following four sets: Uppercase letters, Lowercase letters, Base 10 digits, and Symbols..
+        run: |
+          docker run --name sqlserver -it -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD='$SA_PASSWORD'' -p 1433:1433 -d mcr.microsoft.com/mssql/server:2017-latest
+          echo 'awaiting sqlserver bootup' && sleep 15 && echo 'lets try to logon'
+          sqlcmd -S 127.0.0.1 -U sa -P $SA_PASSWORD -Q 'CREATE DATABASE casbin'
+          sqlcmd -S 127.0.0.1 -U sa -P $SA_PASSWORD -Q 'SELECT name FROM master.dbo.sysdatabases'
+      - name: run oracle
+        run: |
+          docker run --name oracle -it -d -p 1521:1521 -p 8080:8080 orangehrm/oracle-xe-11g
+          echo 'awaiting oracle bootup' && sleep 15 && echo 'lets try to logon'
+          docker run --interactive --link oracle:oracle guywithnose/sqlplus sqlplus system/oracle@oracle:1521/xe
+      - uses: actions/checkout@v2
+      - run: npm i
+      - run: npm test -t oracledb-adapter
+
   finish:
-    needs: [fmt_lint, postgres, mysql_and_mysql2, sqlite3, mssql]
+    needs: [fmt_lint, postgres, mysql_and_mysql2, sqlite3, mssql, oracledb]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
