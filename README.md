@@ -21,7 +21,7 @@ we currently supports the following SQL drives:
 - [x] mysql
 - [x] mysql2
 - [x] sqlite3
-- [x] oracledb
+- [ ] oracledb
 - [x] mssql
 
 ## Installation
