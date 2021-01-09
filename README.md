@@ -11,11 +11,11 @@
 [ci-image]: https://github.com/node-casbin/basic-adapter/workflows/ci/badge.svg?branch=master
 [ci-url]: https://github.com/node-casbin/basic-adapter/actions
 
-Basic Adapter is a basic drives adapter for `Node-Casbin` supports `pg`, `sqlite3`, `mysql`, `mysql2`, `oracledb` and `mssql`. With this library, `Node-Casbin` can load policy from supported drives or save policy to it.
+Basic Adapter is a basic driver adapter for `Node-Casbin` which supports `pg`, `sqlite3`, `mysql`, `mysql2`, and `mssql`. With this library, `Node-Casbin` can load policy from or save policy to supported persistence systems.
 
 ## Drives
 
-we currently supports the following SQL drives:
+We currently support the following SQL systems:
 
 - [x] pg
 - [x] mysql
