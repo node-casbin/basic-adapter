@@ -2,14 +2,11 @@
 
 [![NPM version][npm-image]][npm-url]
 [![NPM download][download-image]][download-url]
-[![Build Status][ci-image]][ci-url]
 
 [npm-image]: https://img.shields.io/npm/v/casbin-basic-adapter.svg
 [npm-url]: https://npmjs.org/package/casbin-basic-adapter
 [download-image]: https://img.shields.io/npm/dm/casbin-basic-adapter.svg
 [download-url]: https://npmjs.org/package/casbin-basic-adapter
-[ci-image]: https://github.com/node-casbin/basic-adapter/workflows/ci/badge.svg?branch=master
-[ci-url]: https://github.com/node-casbin/basic-adapter/actions
 
 Basic Adapter is a basic driver adapter for `Node-Casbin` which supports `pg`, `sqlite3`, `mysql`, `mysql2`, and `mssql`. With this library, `Node-Casbin` can load policy from or save policy to supported persistence systems.
 
