@@ -1,5 +1,6 @@
 # Basic Adapter
 
+[![ci](https://github.com/node-casbin/basic-adapter/actions/workflows/ci.yml/badge.svg)](https://github.com/node-casbin/basic-adapter/actions/workflows/ci.yml)
 [![NPM version][npm-image]][npm-url]
 [![NPM download][download-image]][download-url]
 
