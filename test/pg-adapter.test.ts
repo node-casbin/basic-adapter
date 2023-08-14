@@ -23,7 +23,7 @@ test(
       user: 'postgres',
       database: 'postgres',
       password: 'postgres',
-    })
+    }),
   ),
-  60 * 1000
+  60 * 1000,
 );

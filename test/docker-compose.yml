@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:5
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: casbin
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+  mysql8:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: casbin
+    ports:
+      - '3307:3306'
+    expose:
+      - '3307'
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - '5432:5432'
+    expose:
+      - '5432'
+  mssql:
+    image: mcr.microsoft.com/azure-sql-edge
+    environment:
+      SA_PASSWORD: Passw0rd
+      ACCEPT_EULA: Y
+      NAME: casbin
+    ports:
+      - '1433:1433'
+    expose:
+      - '1433'

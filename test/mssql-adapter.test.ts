@@ -17,6 +17,14 @@ import Runner from './runner';
 
 test(
   'mssql adapter',
-  Runner('mssql', new ConnectionPool('mssql://sa:Passw0rd@localhost/casbin')),
-  60 * 1000
+  Runner('mssql', new ConnectionPool({
+    server: 'localhost',
+    user: 'sa',
+    password: 'Passw0rd',
+
+    options: {
+      trustServerCertificate: true,
+    },
+  })),
+  60 * 1000,
 );

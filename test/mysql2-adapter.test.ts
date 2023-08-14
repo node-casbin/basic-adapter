@@ -23,7 +23,8 @@ test(
       user: 'root',
       password: 'password',
       database: 'casbin',
-    })
+      port: 3307,
+    }),
   ),
-  60 * 1000
+  60 * 1000,
 );

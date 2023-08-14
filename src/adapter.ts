@@ -24,7 +24,7 @@ import type * as mssql from 'mssql';
 import { Helper } from 'casbin';
 import * as Knex from 'knex';
 
-export type Config = Knex.Config & {
+export type Config = Knex.Knex.Config & {
   client: keyof Instance;
 };
 export type Instance = {
@@ -38,21 +38,21 @@ export type Instance = {
 const CasbinRuleTable = 'casbin_rule';
 
 export class BasicAdapter<T extends keyof Instance> implements Adapter {
-  private knex: Knex;
+  private knex: Knex.Knex;
   private config: Config;
   private drive: T;
   private client: Instance[T];
 
   private constructor(drive: T, client: Instance[T]) {
     this.config = { client: drive, useNullAsDefault: drive === 'sqlite3' };
-    this.knex = Knex(this.config);
+    this.knex = Knex.knex(this.config);
     this.drive = drive;
     this.client = client;
   }
 
   static async newAdapter<T extends keyof Instance>(
     drive: T,
-    client: Instance[T]
+    client: Instance[T],
   ): Promise<BasicAdapter<T>> {
     const a = new BasicAdapter(drive, client);
     await a.connect();
@@ -63,7 +63,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
 
   async loadPolicy(model: Model): Promise<void> {
     const result = await this.query(
-      this.knex.select().from(CasbinRuleTable).toQuery()
+      this.knex.select().from(CasbinRuleTable).toQuery(),
     );
 
     for (const line of result) {
@@ -81,7 +81,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
       for (const rule of ast.policy) {
         const line = this.savePolicyLine(ptype, rule);
         const p = this.query(
-          this.knex.insert(line).into(CasbinRuleTable).toQuery()
+          this.knex.insert(line).into(CasbinRuleTable).toQuery(),
         );
         processes.push(p);
       }
@@ -92,7 +92,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
       for (const rule of ast.policy) {
         const line = this.savePolicyLine(ptype, rule);
         const p = this.query(
-          this.knex.insert(line).into(CasbinRuleTable).toQuery()
+          this.knex.insert(line).into(CasbinRuleTable).toQuery(),
         );
         processes.push(p);
       }
@@ -111,13 +111,13 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
   async addPolicies(
     sec: string,
     ptype: string,
-    rules: string[][]
+    rules: string[][],
   ): Promise<void> {
     const processes: Array<Promise<unknown>> = [];
     for (const rule of rules) {
       const line = this.savePolicyLine(ptype, rule);
       const p = this.query(
-        this.knex.insert(line).into(CasbinRuleTable).toQuery()
+        this.knex.insert(line).into(CasbinRuleTable).toQuery(),
       );
       processes.push(p);
     }
@@ -128,24 +128,24 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
   async removePolicy(
     sec: string,
     ptype: string,
-    rule: string[]
+    rule: string[],
   ): Promise<void> {
     const line = this.savePolicyLine(ptype, rule);
     await this.query(
-      this.knex.del().where(line).from(CasbinRuleTable).toQuery()
+      this.knex.del().where(line).from(CasbinRuleTable).toQuery(),
     );
   }
 
   async removePolicies(
     sec: string,
     ptype: string,
-    rules: string[][]
+    rules: string[][],
   ): Promise<void> {
     const processes: Array<Promise<CasbinRule[]>> = [];
     for (const rule of rules) {
       const line = this.savePolicyLine(ptype, rule);
       const p = this.query(
-        this.knex.del().where(line).from(CasbinRuleTable).toQuery()
+        this.knex.del().where(line).from(CasbinRuleTable).toQuery(),
       );
       processes.push(p);
     }
@@ -182,7 +182,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
     }
 
     await this.query(
-      this.knex.del().where(line).from(CasbinRuleTable).toQuery()
+      this.knex.del().where(line).from(CasbinRuleTable).toQuery(),
     );
   }
 
@@ -206,7 +206,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
               reject(err);
             }
 
-            resolve();
+            resolve(void 0);
           });
         });
 
@@ -232,7 +232,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
 
   private savePolicyLine(
     ptype: string,
-    rule: string[]
+    rule: string[],
   ): Omit<CasbinRule, 'id'> {
     const line: Omit<CasbinRule, 'id'> = { ptype };
 
@@ -283,7 +283,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
         await new Promise((resolve, reject) => {
           (<BasicAdapter<'mysql'>>this).client.connect((err) => {
             if (err) reject(err);
-            resolve();
+            resolve(void 0);
           });
         });
 
@@ -341,16 +341,16 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
             (<BasicAdapter<'sqlite3'>>this).client.all(sql, (err, rows) => {
               if (err) reject(err);
 
-              resolve(rows);
+              resolve(rows as CasbinRule[]);
             });
-          }
+          },
         );
 
         break;
       }
       case 'mssql': {
-        result = ((await (<BasicAdapter<'mssql'>>this).client.query(sql))
-          .recordset as unknown) as CasbinRule[] | undefined;
+        result = (await (<BasicAdapter<'mssql'>>this).client.query(sql))
+          .recordset as unknown as CasbinRule[] | undefined;
 
         break;
       }
