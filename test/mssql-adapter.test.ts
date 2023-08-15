@@ -17,14 +17,17 @@ import Runner from './runner';
 
 test(
   'mssql adapter',
-  Runner('mssql', new ConnectionPool({
-    server: 'localhost',
-    user: 'sa',
-    password: 'Passw0rd',
+  Runner(
+    'mssql',
+    new ConnectionPool({
+      server: 'localhost',
+      user: 'sa',
+      password: 'Passw0rd',
 
-    options: {
-      trustServerCertificate: true,
-    },
-  })),
+      options: {
+        trustServerCertificate: true,
+      },
+    }),
+  ),
   60 * 1000,
 );
