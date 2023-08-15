@@ -44,7 +44,11 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
   private client: Instance[T];
 
   private constructor(drive: T, client: Instance[T]) {
-    this.config = { client: drive, useNullAsDefault: drive === 'sqlite3', log: { warn: () => {} } };
+    this.config = {
+      client: drive,
+      useNullAsDefault: drive === 'sqlite3',
+      log: { warn: () => {} },
+    };
     this.knex = Knex.knex(this.config);
     this.drive = drive;
     this.client = client;
