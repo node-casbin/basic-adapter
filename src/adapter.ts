@@ -200,13 +200,13 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
         break;
       }
       case 'sqlite3': {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
           (<BasicAdapter<'sqlite3'>>this).client.close((err) => {
             if (err) {
               reject(err);
             }
 
-            resolve(void 0);
+            resolve();
           });
         });
 
@@ -280,10 +280,10 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
         break;
       }
       case 'mysql': {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
           (<BasicAdapter<'mysql'>>this).client.connect((err) => {
             if (err) reject(err);
-            resolve(void 0);
+            resolve();
           });
         });
 
