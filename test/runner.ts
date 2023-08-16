@@ -28,7 +28,7 @@ async function testGetPolicy(e: Enforcer, res: string[][]): Promise<void> {
 
 async function testGetGroupingPolicy(
   e: Enforcer,
-  res: string[][]
+  res: string[][],
 ): Promise<void> {
   const myRes = await e.getGroupingPolicy();
   expect(array2DEqualsIgnoreOrder(res, myRes)).toBe(true);
@@ -36,7 +36,7 @@ async function testGetGroupingPolicy(
 
 export default function <T extends keyof Instance>(
   drive: T,
-  client: Instance[T]
+  client: Instance[T],
 ) {
   return async function (): Promise<void> {
     const a = await BasicAdapter.newAdapter(drive, client);
@@ -46,7 +46,7 @@ export default function <T extends keyof Instance>(
       // so we need to load the policy from the file adapter (.CSV) first.
       let e = await newEnforcer(
         'examples/rbac_model.conf',
-        'examples/rbac_policy.csv'
+        'examples/rbac_policy.csv',
       );
 
       // This is a trick to save the current policy to the DB.

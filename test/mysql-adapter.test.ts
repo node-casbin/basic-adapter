@@ -23,7 +23,7 @@ test(
       user: 'root',
       password: 'password',
       database: 'casbin',
-    })
+    }),
   ),
-  60 * 1000
+  60 * 1000,
 );
