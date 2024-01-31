@@ -263,7 +263,11 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
   }
 
   private async createTable(): Promise<void> {
-    if (await this.knex.schema.hasTable(CasbinRuleTable)) return;
+    const tableExists = await this.query(
+      this.knex.schema.hasTable(CasbinRuleTable).toString(),
+    );
+
+    if (tableExists.length > 0) return;
 
     const createTableSQL = this.knex.schema
       .createTable(CasbinRuleTable, (table) => {
