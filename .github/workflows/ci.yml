@@ -67,7 +67,7 @@ jobs:
         run: |
           docker run --name sqlserver -it -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD='$SA_PASSWORD'' -p 1433:1433 -d mcr.microsoft.com/mssql/server:2017-latest
           echo 'awaiting sqlserver bootup' && sleep 15
-          sqlcmd -S 127.0.0.1 -U sa -P $SA_PASSWORD -Q 'CREATE DATABASE casbin'
+          sqlcmd -S 127.0.0.1 -U sa -P $SA_PASSWORD -No -Q 'CREATE DATABASE casbin'
       - uses: actions/checkout@v2
       - run: npm i
       - run: npm test -t mssql-adapter
