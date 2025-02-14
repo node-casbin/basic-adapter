@@ -20,7 +20,7 @@ test(
   Runner(
     'mysql2',
     createConnection({
-      user: 'root',
+      user: 'casbin',
       password: 'password',
       database: 'casbin',
     }),

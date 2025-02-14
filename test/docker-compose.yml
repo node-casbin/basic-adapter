@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   mysql:
-    image: mysql:5
+    image: bitnami/mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: casbin

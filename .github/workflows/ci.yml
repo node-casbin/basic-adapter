@@ -32,18 +32,18 @@ jobs:
       - run: npm test -t pg-adapter
   mysql_and_mysql2:
     runs-on: ubuntu-latest
-
     services:
       mysql:
-        image: bitnami/mysql
+        image: bitnami/mysql:latest
         ports:
           - 3306:3306
         env:
+          ALLOW_EMPTY_PASSWORD: yes
           MYSQL_DATABASE: casbin
+          MYSQL_USER: casbin
           MYSQL_ROOT_PASSWORD: password
           MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
         options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
-
     steps:
       - uses: actions/checkout@v2
       - run: npm i
