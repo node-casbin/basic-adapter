@@ -1,6 +1,6 @@
 {
   "name": "casbin-basic-adapter",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A basic adapter supports pg, sqlite3, mysql, mysql2, oracledb and mssql",
   "main": "lib/adapter.js",
   "typings": "lib/adapter.d.ts",
