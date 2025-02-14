@@ -65,6 +65,9 @@ By default, each adapter creates its own table in the database. While this might
 
 ### Why Customization is Important
 
+**Compliance with Naming Conventions:**
+Many production databases follow strict naming conventions. By customizing the table name, you can ensure that your adapter’s tables comply with these conventions, which is essential for production environments.
+
 **Shared Policies:**
 When the same set of policies should be accessible by different adapters or services, having them in separate tables prevents a unified view. Customizing the table name allows you to consolidate policies into a single table that can be shared across adapters.
 
@@ -113,6 +116,8 @@ async function myFunction() {
   // Save the policy back to DB.
   await e.savePolicy();
 ```
+
+By setting the `tableName` option, you ensure that all adapters point to the same table, enabling seamless policy sharing and compliance with any required naming conventions.
 
 ## Getting Help
 
