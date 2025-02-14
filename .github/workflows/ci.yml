@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: bitnami/mysql:latest
+        image: bitnami/mysql:5.7
         ports:
           - 3306:3306
         env:
