@@ -41,8 +41,7 @@ jobs:
           ALLOW_EMPTY_PASSWORD: yes
           MYSQL_DATABASE: casbin
           MYSQL_USER: casbin
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+          MYSQL_PASSWORD: password
         options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
     steps:
       - uses: actions/checkout@v2
