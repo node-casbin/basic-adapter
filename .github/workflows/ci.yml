@@ -32,18 +32,17 @@ jobs:
       - run: npm test -t pg-adapter
   mysql_and_mysql2:
     runs-on: ubuntu-latest
-
     services:
       mysql:
-        image: bitnami/mysql
+        image: bitnami/mysql:5.7
         ports:
           - 3306:3306
         env:
+          ALLOW_EMPTY_PASSWORD: yes
           MYSQL_DATABASE: casbin
-          MYSQL_ROOT_PASSWORD: password
-          MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+          MYSQL_USER: casbin
+          MYSQL_PASSWORD: password
         options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
-
     steps:
       - uses: actions/checkout@v2
       - run: npm i
@@ -59,15 +58,22 @@ jobs:
       - run: npm test -t sqlite3-adapter
 
   mssql:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
+      - name: Install SQLCMD Tools
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+          curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y mssql-tools unixodbc-dev
+          echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> $GITHUB_ENV
       - name: run sqlserver
         env:
           SA_PASSWORD: Passw0rd
         run: |
-          docker run --name sqlserver -it -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD='$SA_PASSWORD'' -p 1433:1433 -d mcr.microsoft.com/mssql/server:2017-latest
+          docker run --name sqlserver -it -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD='$SA_PASSWORD'' -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest
           echo 'awaiting sqlserver bootup' && sleep 15
-          sqlcmd -S 127.0.0.1 -U sa -P $SA_PASSWORD -Q 'CREATE DATABASE casbin'
+          sqlcmd -C -S 127.0.0.1 -U sa -P $SA_PASSWORD -No -Q 'CREATE DATABASE casbin'
       - uses: actions/checkout@v2
       - run: npm i
       - run: npm test -t mssql-adapter

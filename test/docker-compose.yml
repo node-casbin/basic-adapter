@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   mysql:
-    image: mysql:5
+    image: bitnami/mysql:5.7
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: casbin
@@ -20,7 +20,7 @@ services:
     expose:
       - '5432'
   mssql:
-    image: mcr.microsoft.com/azure-sql-edge
+    image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       SA_PASSWORD: Passw0rd
       ACCEPT_EULA: Y
