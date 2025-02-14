@@ -65,7 +65,7 @@ jobs:
         env:
           SA_PASSWORD: Passw0rd
         run: |
-          docker run --name sqlserver -it -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD='$SA_PASSWORD'' -p 1433:1433 -d mcr.microsoft.com/mssql/server:2017-latest
+          docker run --name sqlserver -it -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD='$SA_PASSWORD'' -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest
           echo 'awaiting sqlserver bootup' && sleep 15
           sqlcmd -S 127.0.0.1 -U sa -P $SA_PASSWORD -No -Q 'CREATE DATABASE casbin'
       - uses: actions/checkout@v2
