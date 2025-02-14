@@ -268,30 +268,26 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
   }
 
   private async createTable(): Promise<void> {
-    let [schema, table] = this.tableName.split('.');
-    if (!table) {
-        table = schema;
-        schema = void 0;
+    const parts = this.tableName.split('.');
+    let schema: string | undefined;
+    let table: string;
+    if (parts.length === 2) {
+      [schema, table] = parts;
+    } else {
+      table = parts[0];
     }
-    const $proxy = (schema ? this.knex.schema.withSchema(schema) : this.knex.schema);
-    const tableExists = await this.query(
-      $proxy.hasTable(table).toString(),
-    );
-
-    if (tableExists.length > 0) return;
-
-    const createTableSQL = $proxy
-      .createTable(table, (table) => {
-        table.increments();
-        table.string('ptype').notNullable();
-        for (const i of ['v0', 'v1', 'v2', 'v3', 'v4', 'v5']) {
-          table.string(i);
-        }
-      })
-      .toQuery();
-
-    await this.query(createTableSQL);
+    const schemaProxy = schema ? this.knex.schema.withSchema(schema) : this.knex.schema;
+    const tableExists = await schemaProxy.hasTable(table);
+    if (tableExists) return;
+    await schemaProxy.createTable(table, (tbl) => {
+      tbl.increments();
+      tbl.string('ptype').notNullable();
+      ['v0', 'v1', 'v2', 'v3', 'v4', 'v5'].forEach((col) => {
+        tbl.string(col);
+      });
+    });
   }
+  
 
   private async connect() {
     switch (this.drive) {
