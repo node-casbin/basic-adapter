@@ -35,15 +35,18 @@ export type Instance = {
   mssql: mssql.ConnectionPool;
 };
 
-const CasbinRuleTable = 'casbin_rule';
-
 export class BasicAdapter<T extends keyof Instance> implements Adapter {
   private knex: Knex.Knex;
   private config: Config;
   private drive: T;
   private client: Instance[T];
+  private tableName: string;
 
-  private constructor(drive: T, client: Instance[T]) {
+  private constructor(
+    drive: T,
+    client: Instance[T],
+    tableName: string = 'casbin_rule',
+  ) {
     this.config = {
       client: drive,
       useNullAsDefault: drive === 'sqlite3',
@@ -52,13 +55,15 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
     this.knex = Knex.knex(this.config);
     this.drive = drive;
     this.client = client;
+    this.tableName = tableName;
   }
 
   static async newAdapter<T extends keyof Instance>(
     drive: T,
     client: Instance[T],
+    tableName: string = 'casbin_rule',
   ): Promise<BasicAdapter<T>> {
-    const a = new BasicAdapter(drive, client);
+    const a = new BasicAdapter(drive, client, tableName);
     await a.connect();
     await a.createTable();
 
@@ -67,7 +72,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
 
   async loadPolicy(model: Model): Promise<void> {
     const result = await this.query(
-      this.knex.select().from(CasbinRuleTable).toQuery(),
+      this.knex.select().from(this.tableName).toQuery(),
     );
 
     for (const line of result) {
@@ -76,7 +81,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
   }
 
   async savePolicy(model: Model): Promise<boolean> {
-    await this.query(this.knex.del().from(CasbinRuleTable).toQuery());
+    await this.query(this.knex.del().from(this.tableName).toQuery());
 
     let astMap = model.model.get('p')!;
     const processes: Array<Promise<CasbinRule[]>> = [];
@@ -85,7 +90,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
       for (const rule of ast.policy) {
         const line = this.savePolicyLine(ptype, rule);
         const p = this.query(
-          this.knex.insert(line).into(CasbinRuleTable).toQuery(),
+          this.knex.insert(line).into(this.tableName).toQuery(),
         );
         processes.push(p);
       }
@@ -96,7 +101,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
       for (const rule of ast.policy) {
         const line = this.savePolicyLine(ptype, rule);
         const p = this.query(
-          this.knex.insert(line).into(CasbinRuleTable).toQuery(),
+          this.knex.insert(line).into(this.tableName).toQuery(),
         );
         processes.push(p);
       }
@@ -109,7 +114,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
 
   async addPolicy(sec: string, ptype: string, rule: string[]): Promise<void> {
     const line = this.savePolicyLine(ptype, rule);
-    await this.query(this.knex.insert(line).into(CasbinRuleTable).toQuery());
+    await this.query(this.knex.insert(line).into(this.tableName).toQuery());
   }
 
   async addPolicies(
@@ -121,7 +126,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
     for (const rule of rules) {
       const line = this.savePolicyLine(ptype, rule);
       const p = this.query(
-        this.knex.insert(line).into(CasbinRuleTable).toQuery(),
+        this.knex.insert(line).into(this.tableName).toQuery(),
       );
       processes.push(p);
     }
@@ -136,7 +141,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
   ): Promise<void> {
     const line = this.savePolicyLine(ptype, rule);
     await this.query(
-      this.knex.del().where(line).from(CasbinRuleTable).toQuery(),
+      this.knex.del().where(line).from(this.tableName).toQuery(),
     );
   }
 
@@ -149,7 +154,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
     for (const rule of rules) {
       const line = this.savePolicyLine(ptype, rule);
       const p = this.query(
-        this.knex.del().where(line).from(CasbinRuleTable).toQuery(),
+        this.knex.del().where(line).from(this.tableName).toQuery(),
       );
       processes.push(p);
     }
@@ -186,7 +191,7 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
     }
 
     await this.query(
-      this.knex.del().where(line).from(CasbinRuleTable).toQuery(),
+      this.knex.del().where(line).from(this.tableName).toQuery(),
     );
   }
 
@@ -264,13 +269,13 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
 
   private async createTable(): Promise<void> {
     const tableExists = await this.query(
-      this.knex.schema.hasTable(CasbinRuleTable).toString(),
+      this.knex.schema.hasTable(this.tableName).toString(),
     );
 
     if (tableExists.length > 0) return;
 
     const createTableSQL = this.knex.schema
-      .createTable(CasbinRuleTable, (table) => {
+      .createTable(this.tableName, (table) => {
         table.increments();
         table.string('ptype').notNullable();
         for (const i of ['v0', 'v1', 'v2', 'v3', 'v4', 'v5']) {
