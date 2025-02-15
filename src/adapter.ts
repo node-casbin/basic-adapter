@@ -268,26 +268,29 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
   }
 
   private async createTable(): Promise<void> {
+    // Split tableName into schema and table parts if a schema is provided (e.g. "schema.table")
     const parts = this.tableName.split('.');
-    let schema: string | undefined;
-    let table: string;
-    if (parts.length === 2) {
-      [schema, table] = parts;
-    } else {
-      table = parts[0];
-    }
+    const schema = parts.length === 2 ? parts[0] : undefined;
+    const table = parts.length === 2 ? parts[1] : parts[0];
+
+    // Use the schema if provided
     const schemaProxy = schema ? this.knex.schema.withSchema(schema) : this.knex.schema;
+
+    // Check if the table exists using Knex's built-in promise interface
     const tableExists = await schemaProxy.hasTable(table);
     if (tableExists) return;
-    await schemaProxy.createTable(table, (tbl) => {
-      tbl.increments();
+
+    // Create the table with the desired columns
+    const createTableSQL = schemaProxy.createTable(table, (tbl) => {
+      tbl.increments(); // Auto-incrementing primary key
       tbl.string('ptype').notNullable();
       ['v0', 'v1', 'v2', 'v3', 'v4', 'v5'].forEach((col) => {
         tbl.string(col);
-      });
+      }).toQuery();
     });
+
+    await this.query(createTableSQL);
   }
-  
 
   private async connect() {
     switch (this.drive) {
