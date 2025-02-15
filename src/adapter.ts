@@ -273,7 +273,9 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
     const table = parts.length === 2 ? parts[1] : parts[0];
 
     // use the schema if provided
-    const schemaProxy = schema ? this.knex.schema.withSchema(schema) : this.knex.schema;
+    const schemaProxy = schema
+      ? this.knex.schema.withSchema(schema)
+      : this.knex.schema;
 
     const tableExists = await this.query(
       schemaProxy.hasTable(table).toString(),
