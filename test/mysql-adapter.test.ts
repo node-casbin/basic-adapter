@@ -20,9 +20,9 @@ test(
   Runner(
     'mysql',
     createConnection({
+      database: 'casbin',
       user: 'casbin',
       password: 'password',
-      database: 'casbin',
     }),
   ),
   60 * 1000,

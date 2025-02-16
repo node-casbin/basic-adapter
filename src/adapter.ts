@@ -27,6 +27,7 @@ import * as Knex from 'knex';
 export type Config = Knex.Knex.Config & {
   client: keyof Instance;
 };
+
 export type Instance = {
   pg: pg.Client;
   mysql: mysql.Connection;
@@ -284,11 +285,11 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
     if (tableExists.length > 0) return;
 
     const createTableSQL = schemaProxy
-      .createTable(table, (table) => {
-        table.increments();
-        table.string('ptype').notNullable();
+      .createTable(table, t => {
+        t.increments();
+        t.string('ptype').notNullable();
         for (const i of ['v0', 'v1', 'v2', 'v3', 'v4', 'v5']) {
-          table.string(i);
+          t.string(i);
         }
       })
       .toQuery();

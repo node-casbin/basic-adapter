@@ -15,4 +15,11 @@
 import { Database } from 'sqlite3';
 import Runner from './runner';
 
-test('sqlite3 adapter', Runner('sqlite3', new Database(':memory:')), 60 * 1000);
+test(
+  'sqlite3 adapter',
+  Runner(
+    'sqlite3',
+    new Database(':memory:')
+  ),
+  60 * 1000
+);
