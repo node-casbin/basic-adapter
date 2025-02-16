@@ -284,8 +284,8 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
 
     if (tableExists.length > 0) return;
 
-    const createTableSQL = schemaProxy
-      .createTable(table, t => {
+    const createTableSQL = this.knex.schema
+      .createTable(this.tableName, (t) => {
         t.increments();
         t.string('ptype').notNullable();
         for (const i of ['v0', 'v1', 'v2', 'v3', 'v4', 'v5']) {
