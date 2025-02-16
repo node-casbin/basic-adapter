@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createConnection } from "mysql2/promise";
-import Runner from "./runner";
+import { createConnection } from 'mysql2/promise';
+import Runner from './runner';
 
 test(
-  "mysql2 adapter",
+  'mysql2 adapter',
   Runner(
-    "mysql2",
+    'mysql2',
     createConnection({
-      database: "casbin",
-      user: "casbin",
-      password: "password",
+      database: 'casbin',
+      user: 'casbin',
+      password: 'password',
     }),
   ),
   60 * 1000,
