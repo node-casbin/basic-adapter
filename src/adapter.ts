@@ -27,6 +27,7 @@ import * as Knex from 'knex';
 export type Config = Knex.Knex.Config & {
   client: keyof Instance;
 };
+
 export type Instance = {
   pg: pg.Client;
   mysql: mysql.Connection;
@@ -268,18 +269,27 @@ export class BasicAdapter<T extends keyof Instance> implements Adapter {
   }
 
   private async createTable(): Promise<void> {
+    const parts = this.tableName.split('.');
+    const schema = parts.length === 2 ? parts[0] : undefined;
+    const table = parts.length === 2 ? parts[1] : parts[0];
+
+    // use the schema if provided
+    const schemaProxy = schema
+      ? this.knex.schema.withSchema(schema)
+      : this.knex.schema;
+
     const tableExists = await this.query(
-      this.knex.schema.hasTable(this.tableName).toString(),
+      schemaProxy.hasTable(table).toString(),
     );
 
     if (tableExists.length > 0) return;
 
     const createTableSQL = this.knex.schema
-      .createTable(this.tableName, (table) => {
-        table.increments();
-        table.string('ptype').notNullable();
+      .createTable(this.tableName, (t) => {
+        t.increments();
+        t.string('ptype').notNullable();
         for (const i of ['v0', 'v1', 'v2', 'v3', 'v4', 'v5']) {
-          table.string(i);
+          t.string(i);
         }
       })
       .toQuery();
